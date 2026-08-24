@@ -1,0 +1,18 @@
+[project]
+name = "job-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "RaviRajGhorsai", email = "graviraj344@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "django>=6.1",
+    "django-cors-headers>=4.9.0",
+    "djangorestframework>=3.18.0",
+    "djangorestframework-simplejwt>=5.5.1",
+    "psycopg2-binary>=2.9.12",
+]
+
+
