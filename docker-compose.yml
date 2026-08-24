@@ -1,0 +1,63 @@
+services:
+
+  # ── Databases (one per service) ────────────────────────
+  job-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: job_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    
+    volumes:
+      - job_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+
+  candidate-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: candidate_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    
+    volumes:
+      - candidate_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+# ── Job Service ────────────────────────────────────────
+  job-service:
+    build: ./job-service
+    ports:
+      - "8000:8000"
+    env_file: ./job-service/.env
+    depends_on:
+      job-db:     { condition: service_healthy }
+      
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  # ── Candidate Service ──────────────────────────────────
+  candidate-service:
+    build: ./candidate-service
+    ports:
+      - "8777:8777"
+    env_file: ./candidate-service/.env
+    depends_on:
+      candidate-db: { condition: service_healthy }
+      
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8777"
+
+volumes:
+  job_db_data:
+  candidate_db_data:
+
+
+
+#python manage.py create_os_index &&
