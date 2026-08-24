@@ -4,9 +4,9 @@ services:
   job-db:
     image: postgres:17
     environment:
-      POSTGRES_DB: job_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB_JOB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     
     volumes:
       - job_db_data:/var/lib/postgresql/data
@@ -18,9 +18,9 @@ services:
   candidate-db:
     image: postgres:17
     environment:
-      POSTGRES_DB: candidate_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB_CANDIDATE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     
     volumes:
       - candidate_db_data:/var/lib/postgresql/data
