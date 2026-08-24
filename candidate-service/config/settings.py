@@ -93,6 +93,14 @@ DATABASES = {
 }
 
 
+# Kafka
+
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
+
+OPENSEARCH_HOST = os.getenv('OPENSEARCH_HOST')
+OPENSEARCH_PORT = os.getenv('OPENSEARCH_PORT')
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
