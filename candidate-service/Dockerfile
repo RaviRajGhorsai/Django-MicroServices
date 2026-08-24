@@ -26,8 +26,7 @@ RUN uv pip install --system -r pyproject.toml
 COPY . /app
 
 
-EXPOSE 8666
-
-CMD ["python", "-u", "manage.py", "runserver", "0.0.0.0:8666"]  
+EXPOSE 8777
+CMD ["python", "-u", "manage.py", "runserver", "0.0.0.0:8777"]  
 
 
