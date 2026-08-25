@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from candidates.models import Candidate
 from candidates.serializers.candidate_serializer import CandidateSerializer
 
+from candidates.tasks import index_candidate_in_opensearch
+from candidates.search import delete_candidate
 
 class CandidateViewSet(viewsets.ViewSet):
     """
@@ -17,7 +19,10 @@ class CandidateViewSet(viewsets.ViewSet):
         """
         serializer = CandidateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        candidate = serializer.save()
+
+        index_candidate_in_opensearch.delay(candidate.id)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
@@ -35,7 +40,9 @@ class CandidateViewSet(viewsets.ViewSet):
         candidate = get_object_or_404(Candidate, pk=pk)
         serializer = CandidateSerializer(candidate, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        candidate = serializer.save()
+
+        index_candidate_in_opensearch.delay(candidate.id)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, pk=None):
@@ -43,5 +50,7 @@ class CandidateViewSet(viewsets.ViewSet):
         DELETE /api/candidates/{id}/ - Delete candidate profile.
         """
         candidate = get_object_or_404(Candidate, pk=pk)
+
+        delete_candidate(candidate.id)
         candidate.delete()
         return Response({"message": "Candidate deleted successfully."}, status=status.HTTP_200_OK)
