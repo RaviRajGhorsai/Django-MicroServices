@@ -102,6 +102,10 @@ KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
 OPENSEARCH_HOST = os.getenv('OPENSEARCH_HOST')
 OPENSEARCH_PORT = os.getenv('OPENSEARCH_PORT')
 
+CELERY_BROKER_URL     = os.getenv('REDIS_URL', default='redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', default='redis://redis:6379/0')
+
+
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
@@ -148,5 +152,19 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MAILERS = {
     "default": {
         "BACKEND": "django.core.mail.backends.console.EmailBackend",
+    },
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
     },
 }
