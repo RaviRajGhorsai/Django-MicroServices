@@ -11,6 +11,11 @@ from jobs.kafka_producer import publish_event
 from jobs.tasks import index_job_in_opensearch
 from jobs.search import search_applicants, delete_job
 
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 class JobViewSet(viewsets.ViewSet):
     """
     ViewSet handling CRUD actions for Job:
@@ -67,9 +72,10 @@ class JobViewSet(viewsets.ViewSet):
 
     def destroy(self, request, pk=None):
         instance = get_object_or_404(Job, pk=pk)
-        instance.delete()
-        delete_job(instance.id)
 
+        delete_job(instance.id)
+        instance.delete()
+    
         return Response({"message": "Job deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
     action(detail=True, methods=['get'], url_path='applicants')
