@@ -44,4 +44,4 @@ class CandidateViewSet(viewsets.ViewSet):
         """
         candidate = get_object_or_404(Candidate, pk=pk)
         candidate.delete()
-        return Response({"message": "Candidate deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Candidate deleted successfully."}, status=status.HTTP_200_OK)
