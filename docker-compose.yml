@@ -86,6 +86,8 @@ services:
     ports:
       - "8000:8000"
     env_file: ./job-service/.env
+    volumes:
+    - ./job-service:/app
     depends_on:
       job-db:     { condition: service_healthy }
       
@@ -116,6 +118,8 @@ services:
     ports:
       - "8777:8777"
     env_file: ./candidate-service/.env
+    volumes:
+    - ./candidate-service:/app
     depends_on:
       candidate-db: { condition: service_healthy }
       
