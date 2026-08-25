@@ -131,25 +131,25 @@ services:
       sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8777"
 
-    candidate-worker:
-      build: ./candidate-service
-      env_file: ./candidate-service/.env
-      volumes:
-        - ./candidate-service:/app
-      depends_on:
-        candidate-db: { condition: service_healthy }
-        redis:        { condition: service_healthy }
-      command: celery -A config worker -l info -Q candidate-service
+  candidate-worker:
+    build: ./candidate-service
+    env_file: ./candidate-service/.env
+    volumes:
+      - ./candidate-service:/app
+    depends_on:
+      candidate-db: { condition: service_healthy }
+      redis:        { condition: service_healthy }
+    command: celery -A config worker -l info -Q candidate-service
 
-    candidate-consumer:
-      build: ./candidate-service
-      env_file: ./candidate-service/.env
-      volumes:
-        - ./candidate-service:/app
-      depends_on:
-        kafka:        { condition: service_healthy }
-        candidate-db: { condition: service_healthy }
-      command: python manage.py run_consumer
+  candidate-consumer:
+    build: ./candidate-service
+    env_file: ./candidate-service/.env
+    volumes:
+      - ./candidate-service:/app
+    depends_on:
+      kafka:        { condition: service_healthy }
+      candidate-db: { condition: service_healthy }
+    command: python manage.py run_consumer
 
 volumes:
   job_db_data:
