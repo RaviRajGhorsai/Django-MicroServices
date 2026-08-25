@@ -106,6 +106,8 @@ KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
 OPENSEARCH_HOST = os.getenv('OPENSEARCH_HOST')
 OPENSEARCH_PORT = os.getenv('OPENSEARCH_PORT')
 
+CELERY_BROKER_URL     = os.getenv('REDIS_URL', default='redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', default='redis://redis:6379/0')
 
 
 # Password validation
