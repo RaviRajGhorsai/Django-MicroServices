@@ -6,6 +6,8 @@ from candidates.models import JobApplication
 from candidates.serializers import JobApplicationSerializer
 from candidates.kafka_producer import publish_event
 
+from candidates.search import list_applications
+
 
 class JobApplicationViewSet(viewsets.ViewSet):
     """
@@ -19,15 +21,10 @@ class JobApplicationViewSet(viewsets.ViewSet):
     def list(self, request):
         candidate_id = request.query_params.get('candidate_id')
 
-        queryset = JobApplication.objects.all().order_by('-applied_at')
-
-        if candidate_id:
-            queryset = queryset.filter(candidate_id=candidate_id)
-
-        serializer = JobApplicationSerializer(queryset, many=True)
+        applications = list_applications(candidate_id)
 
         return Response(
-            serializer.data,
+            applications,
             status=status.HTTP_200_OK
         )
 

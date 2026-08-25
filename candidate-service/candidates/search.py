@@ -8,7 +8,7 @@ client = OpenSearch(
 
 CANDIDATES_INDEX = 'candidates'
 JOBS_INDEX       = 'jobs'        # written by job-service, read by us
-
+APPLICATIONS_INDEX = 'applications'
 
 # ══════════════════════════════════════════════════════
 # CANDIDATES INDEX — candidate-service owns this
@@ -116,3 +116,39 @@ def get_job_by_id(job_id):
         return {'id': resp['_id'], **resp['_source']}
     except Exception:
         return None
+
+def list_applications(candidate_id=None):
+    query = {
+        "bool": {
+            "filter": []
+        }
+    }
+
+    if candidate_id:
+        query["bool"]["filter"].append({
+            "term": {
+                "candidate_id": int(candidate_id)
+            }
+        })
+
+    response = client.search(
+        index=APPLICATIONS_INDEX,
+        body={
+            "query": query,
+            "sort": [
+                {
+                    "applied_at": {
+                        "order": "desc"
+                    }
+                }
+            ]
+        }
+    )
+
+    return [
+        {
+            "id": hit["_id"],
+            **hit["_source"]
+        }
+        for hit in response["hits"]["hits"]
+    ]
