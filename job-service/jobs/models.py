@@ -42,4 +42,3 @@ class Application(models.Model):
 
     class Meta:
         unique_together = [('job', 'candidate_id')]
-       
