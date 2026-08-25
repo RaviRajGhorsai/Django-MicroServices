@@ -98,6 +98,8 @@ services:
   job-worker:
     build: ./job-service
     env_file: ./job-service/.env
+    volumes:
+    - ./job-service:/app
     depends_on:
       job-db: { condition: service_healthy }
       redis:  { condition: service_healthy }
@@ -106,6 +108,8 @@ services:
   job-consumer:
     build: ./job-service
     env_file: ./job-service/.env
+    volumes:
+    - ./job-service:/app
     depends_on:
       kafka:  { condition: service_healthy }
       job-db: { condition: service_healthy }
