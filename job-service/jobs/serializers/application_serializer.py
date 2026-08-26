@@ -14,10 +14,10 @@ class ApplicationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'job', 'candidate_id', 'candidate_data',
             'candidate_name', 'candidate_email', 'candidate_skills',
-            'cover_letter', 'status', 'applied_at', 'updated_at',
+            'cover_letter', 'status', 'applied_at', 
         ]
         read_only_fields = [
-            'candidate_data', 'status', 'applied_at', 'updated_at'
+            'candidate_data', 'status', 'applied_at',
         ]
 
     def get_candidate_name(self, obj):
