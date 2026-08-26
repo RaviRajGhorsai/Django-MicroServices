@@ -63,7 +63,7 @@ class AuthViewSet(viewsets.ViewSet):
                 'message': 'Invalid credentials.',
             }, status=status.HTTP_401_UNAUTHORIZED)
 
-        refresh = RefreshToken.for_user(user)
+        refresh = HRToken.for_user(user)
 
         return Response({
             'data': {
@@ -76,6 +76,7 @@ class AuthViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'], url_path='me',
             permission_classes=[])  # IsAuthenticated from settings kicks in
+
     def me(self, request: Request):
         """GET /api/auth/me/ — returns the authenticated HR's profile."""
         return Response({
