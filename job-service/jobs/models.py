@@ -31,11 +31,7 @@ class Application(models.Model):
     ]
     job                  = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')
     candidate_id         = models.IntegerField()               # ref only — no FK to candidate-db
-    candidate_name       = models.CharField(max_length=255)
-    candidate_email      = models.EmailField()
-    candidate_skills     = models.JSONField(default=list)      # denormalized from Kafka
-    candidate_location   = models.CharField(max_length=255, blank=True)
-    experience_years     = models.IntegerField(default=0)
+    candidate_data       = models.JSONField(default=dict)
     cover_letter         = models.TextField(blank=True)
     status               = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     applied_at           = models.DateTimeField(auto_now_add=True)
