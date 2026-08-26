@@ -36,7 +36,7 @@ class SerializerTests(TestCase):
         self.assertEqual(serializer.data['title'], 'Software Engineer')
         self.assertEqual(serializer.data['company'], 'Tech Corp')
         
-    def test_application_serializer_method_fields(self):
+    def test_application_serializer(self):
         app = Application.objects.create(
             job=self.job,
             candidate_id=1,
@@ -47,6 +47,9 @@ class SerializerTests(TestCase):
             }
         )
         serializer = ApplicationSerializer(app)
-        self.assertEqual(serializer.data['candidate_name'], 'Bob')
-        self.assertEqual(serializer.data['candidate_email'], 'bob@example.com')
-        self.assertEqual(serializer.data['candidate_skills'], ['Python', 'Django'])
+        self.assertEqual(serializer.data['candidate_data']['name'], 'Bob')
+        self.assertEqual(serializer.data['candidate_data']['email'], 'bob@example.com')
+        self.assertEqual(serializer.data['status'], 'pending')
+        self.assertNotIn('candidate_name', serializer.data)
+        self.assertNotIn('candidate_email', serializer.data)
+        self.assertNotIn('candidate_skills', serializer.data)
