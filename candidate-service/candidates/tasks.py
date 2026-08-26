@@ -20,3 +20,9 @@ def send_job_match_notification(candidate_id: int, candidate_email: str,
         f"[EMAIL→CANDIDATE] Job match for candidate {candidate_id}: "
         f"'{job_title}' | matched skills: {matched_skills} → {candidate_email}"
     )
+
+@app.task(queue='candidate-service')
+def send_application_status_update(application_id: int, status: str):
+    logger.info(
+        f"[EMAIL→CANDIDATE] Application status updated for candidate {application_id}: {status}"
+    )

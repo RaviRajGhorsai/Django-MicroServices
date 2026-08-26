@@ -54,7 +54,12 @@ class Command(BaseCommand):
 
     def on_status_updated(self, event: dict):
         from candidates.models import JobApplication
+        from candidates.tasks import send_application_status_update
         JobApplication.objects.filter(
             job_id=event['job_id'],
             candidate_id=event['candidate_id'],
         ).update(status=event['new_status'])
+        send_application_status_update.delay(
+            application_id=event['application_id'],
+            status=event['new_status'],
+        )
