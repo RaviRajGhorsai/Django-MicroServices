@@ -10,12 +10,12 @@ class Candidate(models.Model):
                        )
 
     name             = models.CharField(max_length=255)
-    email            = models.EmailField(unique=True)
-    phone            = models.CharField(max_length=20, blank=True)
-    skills           = models.JSONField(default=list)
-    experience_years = models.IntegerField(default=0)
-    location         = models.CharField(max_length=255, blank=True)
-    resume_text      = models.TextField(blank=True)
+    email            = models.EmailField(unique=True, blank=True, null=True)
+    phone            = models.CharField(max_length=20, blank=True, null=True)
+    skills           = models.JSONField(default=list, blank=True, null=True)
+    experience_years = models.IntegerField(default=0, blank=True, null=True)
+    location         = models.CharField(max_length=255, blank=True, null=True)
+    resume_text      = models.TextField(blank=True, null=True)
     created_at       = models.DateTimeField(auto_now_add=True)
     updated_at       = models.DateTimeField(auto_now=True)
 
