@@ -4,19 +4,15 @@ from rest_framework import serializers
 from candidates.models import Candidate
 
 
-class CandidateSerializer(serializers.ModelSerializer):
+class CandidateUpdateSerializer(serializers.ModelSerializer):
     """
     Serializer for the Candidate model, including User creation.
     """
-    username = serializers.CharField(write_only=True, required=False)
-    password = serializers.CharField(write_only=True, required=False, validators=[validate_password])
     
     class Meta:
         model = Candidate
         fields = [
             'id',
-            'username',
-            'password',
             'name',
             'email',
             'phone',
@@ -39,18 +35,37 @@ class CandidateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Skills must be a list.")
         return value
 
+
+class CandidateRegisterSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
     def create(self, validated_data):
-        username = validated_data.pop('username', None)
-        password = validated_data.pop('password', None)
-        email = validated_data.get('email')
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            password=validated_data["password"],
+        )
 
-        user = None
-        if username and password:
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-            )
+        Candidate.objects.create(
+            user=user,
+            name=user.username,
+        )
 
-        candidate = Candidate.objects.create(user=user, **validated_data)
-        return candidate
+        return user
+
+class CandidateDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Candidate
+        fields = [
+            "id",
+            "user",
+            "name",
+            "email",
+            "phone",
+            "skills",
+            "experience_years",
+            "location",
+            "resume_text",
+            "created_at",
+            "updated_at",
+        ]

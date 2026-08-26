@@ -1,7 +1,7 @@
-from .candidate_serializer import CandidateSerializer
+from .candidate_serializer import CandidateDetailSerializer
 from .job_application_serializer import JobApplicationSerializer
 
 __all__ = [
-    'CandidateSerializer',
+    'CandidateDetailSerializer',
     'JobApplicationSerializer',
 ]
