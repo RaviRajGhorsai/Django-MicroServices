@@ -3,10 +3,28 @@ from jobs.models import Application
 
 
 class ApplicationSerializer(serializers.ModelSerializer):
-    """
-    Standard ModelSerializer for Application model.
-    """
+
+    # Expose nested candidate info cleanly in API responses
+    candidate_name  = serializers.SerializerMethodField()
+    candidate_email = serializers.SerializerMethodField()
+    candidate_skills = serializers.SerializerMethodField()
+
     class Meta:
         model = Application
-        fields = '__all__'
-        read_only_fields = ['id', 'applied_at']
+        fields = [
+            'id', 'job', 'candidate_id', 'candidate_data',
+            'candidate_name', 'candidate_email', 'candidate_skills',
+            'cover_letter', 'status', 'applied_at', 'updated_at',
+        ]
+        read_only_fields = [
+            'candidate_data', 'status', 'applied_at', 'updated_at'
+        ]
+
+    def get_candidate_name(self, obj):
+        return obj.candidate_data.get('name', '')
+
+    def get_candidate_email(self, obj):
+        return obj.candidate_data.get('email', '')
+
+    def get_candidate_skills(self, obj):
+        return obj.candidate_data.get('skills', [])
