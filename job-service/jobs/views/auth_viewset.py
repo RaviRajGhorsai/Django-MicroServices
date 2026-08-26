@@ -11,6 +11,20 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from jobs.serializers.hr_serializer import HRRegisterSerializer, HRProfileSerializer
 
+class HRToken(RefreshToken):
+    """
+    Adds role='recruiter' to both access and refresh token payloads.
+    """
+    @classmethod
+    def for_user(cls, user):
+        token = super().for_user(user)
+
+        # Custom claims — available in both access and refresh token
+        token['role']    = 'recruiter'
+        token['email']   = user.email
+        token['company'] = user.hr_profile.company
+
+        return token
 
 class AuthViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
@@ -21,7 +35,7 @@ class AuthViewSet(viewsets.ViewSet):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        refresh = RefreshToken.for_user(user)
+        refresh = HRToken.for_user(user)
 
         return Response({
             'data': {
