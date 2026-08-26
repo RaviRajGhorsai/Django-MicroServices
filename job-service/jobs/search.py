@@ -61,19 +61,24 @@ def delete_job(job_id):
     client.delete(index=JOBS_INDEX, id=str(job_id), ignore=[404])
 
 def index_application(application):
-    client.index(index=APPLICATIONS_INDEX, id=str(application.id), body={
-        'job_id':           application.job.id,
-        'job_title':        application.job.title,
-        'candidate_id':     application.candidate_id,
-        'candidate_name':   application.candidate_name,
-        'candidate_email':  application.candidate_email,
-        'skills':           application.candidate_skills,
-        'location':         application.candidate_location,
-        'experience_years': application.experience_years,
-        'cover_letter':     application.cover_letter,
-        'status':           application.status,
-        'applied_at':       application.applied_at.isoformat(),
-    })
+    data = application.candidate_data   # the JSON snapshot
+    client.index(
+        index=APPLICATIONS_INDEX,
+        id=str(application.id),
+        body={
+            'job_id':           application.job.id,
+            'job_title':        application.job.title,
+            'candidate_id':     application.candidate_id,
+            'candidate_name':   data.get('name', ''),
+            'candidate_email':  data.get('email', ''),
+            'skills':           data.get('skills', []),
+            'location':         data.get('location', ''),
+            'experience_years': data.get('experience_years', 0),
+            'cover_letter':     application.cover_letter,
+            'status':           application.status,
+            'applied_at':       application.applied_at.isoformat(),
+        }
+    )
 
 def update_application_status_in_os(application_id: int, new_status: str):
     client.update(index=APPLICATIONS_INDEX, id=str(application_id), body={
