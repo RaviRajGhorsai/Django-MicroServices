@@ -7,7 +7,7 @@ class JobSearchViewSet(viewsets.ViewSet):
     """Read-only — queries OpenSearch jobs index directly, no job-service HTTP call"""
 
     def list(self, request):
-        """GET /api/jobs/search/"""
+        """GET /api/search/jobs"""
         results = search_jobs_from_opensearch(
             query=request.query_params.get('q'),
             location=request.query_params.get('location'),
@@ -17,7 +17,7 @@ class JobSearchViewSet(viewsets.ViewSet):
         return Response({'count': len(results), 'results': results})
 
     def retrieve(self, request, pk=None):
-        """GET /api/jobs/{id}/"""
+        """GET /api/search/jobs/{id}"""
         job = get_job_by_id(pk)
         if not job:
             return Response({'detail': 'Not found.'}, status=404)
