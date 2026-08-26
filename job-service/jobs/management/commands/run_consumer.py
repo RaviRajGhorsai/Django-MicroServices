@@ -34,18 +34,16 @@ class Command(BaseCommand):
             job_id=event['job_id'],
             candidate_id=event['candidate_id'],
             defaults={
-                'candidate_name':     event['candidate_name'],
-                'candidate_email':    event['candidate_email'],
-                'candidate_skills':   event.get('candidate_skills', []),
-                'candidate_location': event.get('candidate_location', ''),
-                'experience_years':   event.get('experience_years', 0),
-                'cover_letter':       event.get('cover_letter', ''),
-            }
+            'candidate_data': event.get('candidate_data', {}),  # ← single field
+            'cover_letter':   event.get('cover_letter', ''),
+        }
+
         )
         if created:
             index_application_in_opensearch.delay(application.id)
             send_application_notification.delay(
                 job_id=event['job_id'],
-                candidate_name=event['candidate_name'],
-                candidate_email=event['candidate_email'],
+                candidate_name=event['candidate_data'].get('name', ''),
+            candidate_email=event['candidate_data'].get('email', ''),
+
             )
