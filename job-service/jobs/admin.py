@@ -12,8 +12,17 @@ class JobAdmin(admin.ModelAdmin):
 
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'job', 'candidate_name', 'candidate_email', 'status', 'applied_at')
+    list_display = ('id', 'job', 'candidate_id', 'candidate_name', 'candidate_email', 'status', 'applied_at')
     list_filter = ('status', 'applied_at')
-    search_fields = ('candidate_name', 'candidate_email', 'job__title', 'job__company')
+    search_fields = ('candidate_id', 'candidate_data__name', 'candidate_data__email', 'job__title', 'job__company')
     ordering = ('-applied_at',)
+
+    @admin.display(description='Candidate Name')
+    def candidate_name(self, obj):
+        return obj.candidate_data.get('name', '-') if obj.candidate_data else '-'
+
+    @admin.display(description='Candidate Email')
+    def candidate_email(self, obj):
+        return obj.candidate_data.get('email', '-') if obj.candidate_data else '-'
+
 
