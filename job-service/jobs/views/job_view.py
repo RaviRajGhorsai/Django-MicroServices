@@ -121,13 +121,15 @@ class JobViewSet(viewsets.ViewSet):
         """
         job = self._get_own_job(pk, request)  # ownership check
 
-        queryset   = Application.objects.filter(job=job).order_by('-applied_at')
-        serializer = ApplicationSerializer(queryset, many=True)
+        results = search_applicants(
+        job_id=job.id,
+        )
 
         return Response({
-            'data':    serializer.data,
-            'message': 'Applicants retrieved successfully.',
-        }, status=status.HTTP_200_OK)
+        "data": results,
+        "count": len(results),
+        "message": "Applicants retrieved successfully.",
+    }, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], url_path='applicants/search')
     def applicants_search(self, request: Request, pk=None):
@@ -140,15 +142,15 @@ class JobViewSet(viewsets.ViewSet):
 
         results = search_applicants(
             job_id=job.id,
-            query=request.query_params.get('q'),
-            skills=request.query_params.getlist('skills'),
-            location=request.query_params.get('location'),
-            min_experience=request.query_params.get('min_experience'),
-            status=request.query_params.get('status'),
+            query=request.query_params.get("q"),
+            skills=request.query_params.getlist("skills"),
+            location=request.query_params.get("location"),
+            min_experience=request.query_params.get("min_experience"),
+            status=request.query_params.get("status"),
         )
 
         return Response({
-            'data':    results,
-            'count':   len(results),
-            'message': 'Applicants search completed.',
+            "data": results,
+            "count": len(results),
+            "message": "Applicants search completed.",
         }, status=status.HTTP_200_OK)
