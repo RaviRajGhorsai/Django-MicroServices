@@ -1,4 +1,14 @@
 from django.db import models
+from django.contrib.auth.models import User
+
+class HRProfile(models.Model):
+    """Extended profile for HR users."""
+    user    = models.OneToOneField(User, on_delete=models.CASCADE, related_name='hr_profile')
+    company = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} @ {self.company}"
 
 class Job(models.Model):
     STATUS_CHOICES = [
@@ -6,6 +16,15 @@ class Job(models.Model):
         ('active', 'Active'),
         ('closed', 'Closed'),
     ]
+
+    posted_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='jobs',
+    )
+
+
     title            = models.CharField(max_length=255)
     description      = models.TextField()
     company          = models.CharField(max_length=255)

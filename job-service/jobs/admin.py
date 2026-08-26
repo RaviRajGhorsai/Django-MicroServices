@@ -1,5 +1,11 @@
 from django.contrib import admin
-from jobs.models import Job, Application
+from jobs.models import Job, Application, HRProfile
+
+@admin.register(HRProfile)
+class HRProfileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'company', 'created_at')
+    search_fields = ('user__email', 'user__username', 'company')
+    ordering = ('-created_at',)
 
 
 @admin.register(Job)
