@@ -1,39 +1,60 @@
 from django.shortcuts import get_object_or_404
+
 from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from jobs.models import Application
 from jobs.serializers.application_serializer import ApplicationSerializer
-
 from jobs.kafka_producer import publish_event
 from jobs.search import update_application_status_in_os
 
+
 class ApplicationViewSet(viewsets.ViewSet):
     """
-    ViewSet handling CRUD actions for Application:
-  
-    - GET    /applications/     -> list
-    - GET    /applications/{id} -> retrieve
-   
-    - PATCH  /applications/{id} -> partial_update
-   
+    HR-facing application management.
+    All actions are scoped to applications belonging to the HR's own jobs.
+
+    GET   /api/applications/        list
+    GET   /api/applications/{id}/   retrieve
+    PATCH /api/applications/{id}/   partial_update  (accept / reject)
     """
+    permission_classes = [IsAuthenticated]
 
-    def list(self, request):
-        queryset = Application.objects.all()
+    def _get_own_application(self, pk, request):
+        """
+        Returns the application only if it belongs to a job posted by this HR.
+        Raises 404 otherwise.
+        """
+        return get_object_or_404(
+            Application,
+            pk=pk,
+            job__posted_by=request.user,  # ← double underscore: follows FK to Job
+        )
+
+    def list(self, request: Request):
+        # Only applications for this HR's jobs
+        queryset = Application.objects.filter(
+            job__posted_by=request.user
+        ).order_by('-applied_at')
+
         serializer = ApplicationSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({
+            'data':    serializer.data,
+            'message': 'Applications retrieved successfully.',
+        }, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, pk=None):
-        instance = get_object_or_404(Application, pk=pk)
+    def retrieve(self, request: Request, pk=None):
+        instance   = self._get_own_application(pk, request)
         serializer = ApplicationSerializer(instance)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({
+            'data':    serializer.data,
+            'message': 'Application retrieved successfully.',
+        }, status=status.HTTP_200_OK)
 
-    
-
-    def partial_update(self, request, pk=None):
-        instance = get_object_or_404(Application, pk=pk)
-
+    def partial_update(self, request: Request, pk=None):
+        instance   = self._get_own_application(pk, request)
         old_status = instance.status
         new_status = request.data.get('status')
 
@@ -42,23 +63,22 @@ class ApplicationViewSet(viewsets.ViewSet):
         serializer.save()
 
         if new_status and new_status != old_status:
+            # Keep OpenSearch in sync
+            update_application_status_in_os(instance.id, new_status)
 
-            # Update OpenSearch
-            update_application_status_in_os(
-                instance.id,
-                new_status
-            )
-
-            # Notify candidate-service through Kafka
+            # Notify candidate-service via Kafka
             publish_event(
                 'application.status_updated',
                 str(instance.job_id),
                 {
-                    'event_type': 'application.status_updated',
-                    'job_id': instance.job_id,
+                    'event_type':   'application.status_updated',
+                    'job_id':       instance.job_id,
                     'candidate_id': instance.candidate_id,
-                    'new_status': new_status,
+                    'new_status':   new_status,
                 }
             )
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({
+            'data':    serializer.data,
+            'message': 'Application updated successfully.',
+        }, status=status.HTTP_200_OK)
