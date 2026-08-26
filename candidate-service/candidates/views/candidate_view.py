@@ -3,7 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 
 from candidates.models import Candidate
-from candidates.serializers.candidate_serializer import CandidateSerializer
+from candidates.serializers.candidate_serializer import CandidateDetailSerializer
 
 from candidates.tasks import index_candidate_in_opensearch
 from candidates.search import delete_candidate
@@ -17,7 +17,7 @@ class CandidateViewSet(viewsets.ViewSet):
         """
         POST /api/candidates/ - Register a new candidate.
         """
-        serializer = CandidateSerializer(data=request.data)
+        serializer = CandidateDetailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         candidate = serializer.save()
 
@@ -30,7 +30,7 @@ class CandidateViewSet(viewsets.ViewSet):
         GET /api/candidates/{id}/ - View profile by candidate ID.
         """
         candidate = get_object_or_404(Candidate, pk=pk)
-        serializer = CandidateSerializer(candidate)
+        serializer = CandidateDetailSerializer(candidate)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, pk=None):
@@ -38,7 +38,7 @@ class CandidateViewSet(viewsets.ViewSet):
         PATCH /api/candidates/{id}/ - Partial update candidate profile.
         """
         candidate = get_object_or_404(Candidate, pk=pk)
-        serializer = CandidateSerializer(candidate, data=request.data, partial=True)
+        serializer = CandidateDetailSerializer(candidate, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         candidate = serializer.save()
 
