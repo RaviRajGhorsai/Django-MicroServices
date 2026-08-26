@@ -49,22 +49,22 @@ class JobApplicationViewSet(viewsets.ViewSet):
 
         candidate = application.candidate
 
-        publish_event(
-            'application.submitted',
-            str(application.job_id),
-            {
-                'event_type': 'application.submitted',
-                'job_id': application.job_id,
-                'job_title': application.job_title,
+        publish_event('application.submitted', str(application.job_id), {
+                'event_type':   'application.submitted',
+                'job_id':       application.job_id,
+                'job_title':    application.job_title,
                 'candidate_id': candidate.id,
-                'candidate_name': candidate.name,
-                'candidate_email': candidate.email,
-                'candidate_skills': candidate.skills,
-                'candidate_location': candidate.location,
-                'experience_years': candidate.experience_years,
+                'candidate_data': {              # ← everything in one block
+                    'name':             candidate.name,
+                    'email':            candidate.email,
+                    'phone':            candidate.phone,
+                    'skills':           candidate.skills,
+                    'location':         candidate.location,
+                    'experience_years': candidate.experience_years,
+                    'resume_text':      candidate.resume_text,
+                },
                 'cover_letter': application.cover_letter,
-            }
-        )
+            })
 
         return Response(
             JobApplicationSerializer(application).data,
