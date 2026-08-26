@@ -30,6 +30,7 @@ class Command(BaseCommand):
     def on_application_submitted(self, event: dict):
         from jobs.models import Application
         from jobs.tasks import index_application_in_opensearch, send_application_notification
+        
         application, created = Application.objects.get_or_create(
             job_id=event['job_id'],
             candidate_id=event['candidate_id'],
@@ -37,7 +38,6 @@ class Command(BaseCommand):
             'candidate_data': event.get('candidate_data', {}),  # ← single field
             'cover_letter':   event.get('cover_letter', ''),
         }
-
         )
         if created:
             index_application_in_opensearch.delay(application.id)
