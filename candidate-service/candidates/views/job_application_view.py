@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 
 from candidates.models import JobApplication
 from candidates.serializers import JobApplicationSerializer
@@ -18,8 +19,10 @@ class JobApplicationViewSet(viewsets.ViewSet):
     POST /applications/       -> create
     """
 
+    permission_classes = [IsAuthenticated]
+
     def list(self, request):
-        candidate_id = request.query_params.get('candidate_id')
+        candidate_id = request.user.candidate_profile.id
 
         applications = list_applications(candidate_id)
 
@@ -31,7 +34,8 @@ class JobApplicationViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None):
         application = get_object_or_404(
             JobApplication,
-            pk=pk
+            pk=pk,
+            candidate_id = request.user.candidate_profile.id
         )
 
         serializer = JobApplicationSerializer(application)
