@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from jobs.models import Application
 from jobs.serializers.application_serializer import ApplicationSerializer
 from jobs.kafka_producer import publish_event
-from jobs.search import update_application_status_in_os
+from jobs.search import update_application_status_in_os, list_applications
 
 
 class ApplicationViewSet(viewsets.ViewSet):
@@ -33,13 +33,24 @@ class ApplicationViewSet(viewsets.ViewSet):
 
     def list(self, request: Request):
         # Only applications for this HR's jobs
-        queryset = Application.objects.filter(
-            job__posted_by=request.user
-        ).order_by('-applied_at')
+        # queryset = Application.objects.filter(
+        #     job__posted_by=request.user
+        # ).order_by('-applied_at')
 
-        serializer = ApplicationSerializer(queryset, many=True)
+        page = int(request.query_params.get("page", 1))
+        page_size = int(request.query_params.get("page_size", 20))
+        status_filter = request.query_params.get("status")
+
+        result = list_applications(
+            posted_by=request.user.id,
+            status=status_filter,
+            page=page,
+            page_size=page_size,
+        )
+
+        # serializer = ApplicationSerializer(queryset, many=True)
         return Response({
-            'data':    serializer.data,
+            'data':    result,
             'message': 'Applications retrieved successfully.',
         }, status=status.HTTP_200_OK)
 

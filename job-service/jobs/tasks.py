@@ -19,7 +19,7 @@ def index_application_in_opensearch(self, application_id: int):
     try:
         from jobs.models import Application
         from jobs.search import index_application
-        app = Application.objects.get(pk=application_id)
+        app = Application.objects.select_related('job').get(pk=application_id)
         index_application(app)
     except Exception as exc:
         raise self.retry(exc=exc)
