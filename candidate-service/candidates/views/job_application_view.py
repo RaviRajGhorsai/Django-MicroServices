@@ -46,6 +46,7 @@ class JobApplicationViewSet(viewsets.ViewSet):
         )
 
     def create(self, request):
+        
         serializer = JobApplicationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
