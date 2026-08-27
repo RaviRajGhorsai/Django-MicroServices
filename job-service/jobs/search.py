@@ -52,6 +52,7 @@ def create_index():
             body={
                 "mappings": {
                     "properties": {
+                        "posted_by": {"type": "integer"},
                         "job_id": {"type": "integer"},
                         "job_title": {"type": "text"},
                         "candidate_id": {"type": "integer"},
@@ -132,6 +133,7 @@ def index_application(application):
             "job_id": application.job.id,
             "job_title": application.job.title,
             "candidate_id": application.candidate_id,
+            "posted_by": application.job.posted_by.id,
             # Keep candidate data as one JSON object
             "candidate_data": application.candidate_data,
             "cover_letter": application.cover_letter,
@@ -237,3 +239,65 @@ def search_applicants(
 
     return results
 
+def list_applications(
+    posted_by=None,
+    job_id=None,
+    status=None,
+    page=1,
+    page_size=20,
+):
+    """
+    List applications for a given HR user (posted_by), optionally scoped
+    to a single job, with pagination.
+    """
+
+    filters = []
+
+    if posted_by is not None:
+        filters.append({"term": {"posted_by": posted_by}})
+
+    if job_id is not None:
+        filters.append({"term": {"job_id": job_id}})
+
+    if status:
+        filters.append({"term": {"status": status}})
+
+    body = {
+        "query": {
+            "bool": {
+                "filter": filters or [{"match_all": {}}],
+            }
+        },
+        "sort": [{"applied_at": {"order": "desc"}}],
+        "from": (page - 1) * page_size,
+        "size": page_size,
+    }
+
+    response = client.search(
+        index=APPLICATIONS_INDEX,
+        body=body,
+    )
+
+    hits = response["hits"]["hits"]
+    total = response["hits"]["total"]["value"]
+
+    results = []
+    for hit in hits:
+        source = hit["_source"]
+        results.append({
+            "application_id": hit["_id"],
+            "job_id": source.get("job_id"),
+            "job_title": source.get("job_title"),
+            "candidate_id": source.get("candidate_id"),
+            "status": source.get("status"),
+            "applied_at": source.get("applied_at"),
+            "cover_letter": source.get("cover_letter"),
+            **source.get("candidate_data", {}),
+        })
+
+    return {
+        "results": results,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
