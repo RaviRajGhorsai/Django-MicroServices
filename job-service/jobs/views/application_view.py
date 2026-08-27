@@ -1,7 +1,6 @@
 from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -20,7 +19,6 @@ class ApplicationViewSet(viewsets.ViewSet):
     GET   /api/applications/{id}/   retrieve
     PATCH /api/applications/{id}/   partial_update  (accept / reject)
     """
-    permission_classes = [IsAuthenticated]
 
     def _get_own_application(self, pk, request):
         """

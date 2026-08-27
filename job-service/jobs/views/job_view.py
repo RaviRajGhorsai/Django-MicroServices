@@ -4,13 +4,11 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from jobs.models import Job, Application
+from jobs.models import Job
 from jobs.serializers.job_serializer import JobSerializer
-from jobs.serializers.application_serializer import ApplicationSerializer
 from jobs.kafka_producer import publish_event
 from jobs.tasks import index_job_in_opensearch
 from jobs.search import search_applicants, delete_job
@@ -31,7 +29,6 @@ class JobViewSet(viewsets.ViewSet):
     GET    /api/jobs/{id}/applicants/        applicants  (DB list)
     GET    /api/jobs/{id}/applicants/search/ applicants_search (OpenSearch)
     """
-    permission_classes = [IsAuthenticated]
 
     # ── helpers ───────────────────────────────────────────
 
@@ -42,7 +39,6 @@ class JobViewSet(viewsets.ViewSet):
         """
         return get_object_or_404(Job, pk=pk, posted_by=request.user)
 
-    # ── CRUD ──────────────────────────────────────────────
 
     def create(self, request: Request):
         serializer = JobSerializer(data=request.data)
