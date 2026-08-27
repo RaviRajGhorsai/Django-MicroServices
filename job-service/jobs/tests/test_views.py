@@ -27,6 +27,26 @@ class AuthViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('access_token', response.data['data'])
 
+    def test_register_duplicate(self):
+        url = '/api/auth/register'
+        data = {
+            'username': 'hr_dup',
+            'email': 'hr_dup@example.com',
+            'password': 'Password123!',
+            'company': 'Company1'
+        }
+        self.client.post(url, data)
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_login_wrong_password(self):
+        user = User.objects.create_user(username='hr3', email='hr3@example.com', password='Password123!')
+        HRProfile.objects.create(user=user, company='Company3')
+        url = '/api/auth/login'
+        data = {'username': 'hr3', 'password': 'WrongPassword123!'}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 class JobViewSetTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='hr', password='Password123!')
@@ -90,6 +110,21 @@ class JobViewSetTests(APITestCase):
         self.assertFalse(Job.objects.filter(id=self.job.id).exists())
         mock_delete.assert_called_once_with(self.job.id)
 
+    def test_update_other_job(self):
+        url = f'/api/jobs/{self.other_job.id}'
+        response = self.client.patch(url, {'status': 'active'})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_other_job(self):
+        url = f'/api/jobs/{self.other_job.id}'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_job_invalid_data(self):
+        url = f'/api/jobs/{self.job.id}'
+        response = self.client.patch(url, {'status': 'invalid'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 class ApplicationViewSetTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='hr', password='Password123!')
@@ -118,3 +153,25 @@ class ApplicationViewSetTests(APITestCase):
         self.assertEqual(self.app.status, 'accepted')
         mock_update_os.assert_called_once_with(self.app.id, 'accepted')
         mock_publish.assert_called_once()
+
+    def test_list_applications_other_job(self):
+        other_user = User.objects.create_user(username='otherhr', password='Password123!')
+        HRProfile.objects.create(user=other_user, company='Other')
+        other_job = Job.objects.create(posted_by=other_user, title='QA', company='Other', location='Remote')
+        Application.objects.create(job=other_job, candidate_id=2)
+        
+        url = '/api/applications'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['data']), 1)
+        self.assertEqual(response.data['data'][0]['id'], self.app.id)
+
+    def test_update_application_other_job(self):
+        other_user = User.objects.create_user(username='otherhr', password='Password123!')
+        HRProfile.objects.create(user=other_user, company='Other')
+        other_job = Job.objects.create(posted_by=other_user, title='QA', company='Other', location='Remote')
+        other_app = Application.objects.create(job=other_job, candidate_id=2)
+
+        url = f'/api/applications/{other_app.id}'
+        response = self.client.patch(url, {'status': 'accepted'})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

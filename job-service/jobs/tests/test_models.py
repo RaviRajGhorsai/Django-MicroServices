@@ -34,3 +34,16 @@ class ModelTests(TestCase):
         Application.objects.create(job=self.job, candidate_id=1)
         with self.assertRaises(IntegrityError):
             Application.objects.create(job=self.job, candidate_id=1)
+
+    def test_job_posted_by_null_on_user_delete(self):
+        self.user.delete()
+        self.job.refresh_from_db()
+        self.assertIsNone(self.job.posted_by)
+
+    def test_job_field_length_limits(self):
+        max_length_title = Job._meta.get_field('title').max_length
+        self.assertEqual(max_length_title, 255)
+
+    def test_application_jsonfield_default(self):
+        app = Application.objects.create(job=self.job, candidate_id=2)
+        self.assertEqual(app.candidate_data, {})

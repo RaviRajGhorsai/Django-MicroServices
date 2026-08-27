@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from unittest.mock import patch
 
+from django.contrib.auth.models import User
 from candidates.models import Candidate, JobApplication
 
 
@@ -17,7 +18,9 @@ class CandidateViewSetTest(APITestCase):
             "location": "London",
             "resume_text": "Frontend Dev"
         }
+        self.user = User.objects.create_user(username="bob", email="bob@example.com", password="pwd")
         self.candidate = Candidate.objects.create(
+            user=self.user,
             name="Bob Smith",
             email="bob@example.com",
             phone="111222333"
@@ -66,7 +69,9 @@ class CandidateViewSetTest(APITestCase):
 
 class JobApplicationViewSetTest(APITestCase):
     def setUp(self):
+        self.user = User.objects.create_user(username="charlie", email="charlie@example.com", password="pwd")
         self.candidate = Candidate.objects.create(
+            user=self.user,
             name="Charlie",
             email="charlie@example.com"
         )

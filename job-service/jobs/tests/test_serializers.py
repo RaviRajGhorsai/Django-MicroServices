@@ -24,6 +24,28 @@ class SerializerTests(TestCase):
         self.assertEqual(user.username, 'new_hr')
         self.assertTrue(hasattr(user, 'hr_profile'))
         self.assertEqual(user.hr_profile.company, 'New Corp')
+
+    def test_hr_register_serializer_duplicate_username(self):
+        data = {
+            'username': 'hr_user', # Already exists
+            'email': 'unique@example.com',
+            'password': 'StrongPassword123!',
+            'company': 'New Corp'
+        }
+        serializer = HRRegisterSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('username', serializer.errors)
+
+    def test_hr_register_serializer_weak_password(self):
+        data = {
+            'username': 'hr3',
+            'email': 'hr3@example.com',
+            'password': '123', # Too short
+            'company': 'New Corp'
+        }
+        serializer = HRRegisterSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('password', serializer.errors)
         
     def test_hr_profile_serializer(self):
         serializer = HRProfileSerializer(self.hr_profile)
@@ -35,6 +57,19 @@ class SerializerTests(TestCase):
         serializer = JobSerializer(self.job)
         self.assertEqual(serializer.data['title'], 'Software Engineer')
         self.assertEqual(serializer.data['company'], 'Tech Corp')
+        self.assertEqual(serializer.data['status'], 'draft') # default status enforcement check
+
+    def test_job_serializer_skills_required(self):
+        data = {
+            'title': 'Frontend Dev',
+            'description': 'React',
+            'company': 'Tech Corp',
+            'location': 'Remote',
+            'skills_required': ['React', 'JS']
+        }
+        serializer = JobSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.validated_data['skills_required'], ['React', 'JS'])
         
     def test_application_serializer(self):
         app = Application.objects.create(
@@ -53,3 +88,13 @@ class SerializerTests(TestCase):
         self.assertNotIn('candidate_name', serializer.data)
         self.assertNotIn('candidate_email', serializer.data)
         self.assertNotIn('candidate_skills', serializer.data)
+
+    def test_application_serializer_invalid_status(self):
+        data = {
+            'job': self.job.id,
+            'candidate_id': 3,
+            'status': 'invalid_status'
+        }
+        serializer = ApplicationSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('status', serializer.errors)

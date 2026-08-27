@@ -1,11 +1,13 @@
 from django.test import TestCase
 from django.db import IntegrityError
+from django.contrib.auth.models import User
 from candidates.models import Candidate, JobApplication
-
 
 class CandidateModelTest(TestCase):
     def setUp(self):
+        self.user = User.objects.create_user(username="johndoe", email="john@example.com", password="password")
         self.candidate = Candidate.objects.create(
+            user=self.user,
             name="John Doe",
             email="john@example.com",
             phone="1234567890",
@@ -24,8 +26,10 @@ class CandidateModelTest(TestCase):
 
     def test_candidate_unique_email(self):
         """Test candidate email must be unique."""
+        user2 = User.objects.create_user(username="janedoe", email="jane@example.com", password="password")
         with self.assertRaises(IntegrityError):
             Candidate.objects.create(
+                user=user2,
                 name="Jane Doe",
                 email="john@example.com",  # Duplicate email
                 phone="0987654321"
@@ -33,18 +37,29 @@ class CandidateModelTest(TestCase):
 
     def test_candidate_default_values(self):
         """Test defaults for Candidate model."""
+        user2 = User.objects.create_user(username="alice", email="alice@example.com", password="password")
         candidate2 = Candidate.objects.create(
+            user=user2,
             name="Alice",
             email="alice@example.com"
         )
         self.assertEqual(candidate2.skills, [])
         self.assertEqual(candidate2.experience_years, 0)
-        self.assertEqual(candidate2.location, "")
+        self.assertIsNone(candidate2.location)
+
+    def test_cascade_delete(self):
+        """Test that deleting a user deletes the associated candidate profile."""
+        user_id = self.user.id
+        candidate_id = self.candidate.id
+        self.user.delete()
+        self.assertFalse(Candidate.objects.filter(id=candidate_id).exists())
 
 
 class JobApplicationModelTest(TestCase):
     def setUp(self):
+        self.user = User.objects.create_user(username="bob", email="bob@example.com", password="password")
         self.candidate = Candidate.objects.create(
+            user=self.user,
             name="Bob",
             email="bob@example.com"
         )
@@ -79,3 +94,10 @@ class JobApplicationModelTest(TestCase):
         self.application.status = "accepted"
         self.application.save()
         self.assertEqual(self.application.status, "accepted")
+
+    def test_cascade_delete(self):
+        """Test deleting candidate deletes application."""
+        candidate_id = self.candidate.id
+        app_id = self.application.id
+        self.candidate.delete()
+        self.assertFalse(JobApplication.objects.filter(id=app_id).exists())
