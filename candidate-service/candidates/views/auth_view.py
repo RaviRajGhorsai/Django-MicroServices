@@ -72,13 +72,4 @@ class AuthViewSet(viewsets.ViewSet):
             },
             'message': 'Login successful.',
         }, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['get'], url_path='me',
-            permission_classes=[])  # IsAuthenticated from settings kicks in
-
-    def me(self, request: Request):
-        """GET /api/auth/me/ — returns the authenticated HR's profile."""
-        return Response({
-            'data':    CandidateDetailSerializer(request.user.candidate_profile).data,
-            'message': 'Profile retrieved successfully.',
-        }, status=status.HTTP_200_OK)
+         
