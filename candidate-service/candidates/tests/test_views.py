@@ -25,34 +25,28 @@ class CandidateViewSetTest(APITestCase):
             email="bob@example.com",
             phone="111222333"
         )
-        self.list_url = reverse('candidate-list')
-        self.detail_url = reverse('candidate-detail', args=[self.candidate.id])
+        self.me_url = reverse('candidate-me')
+        self.edit_url = reverse('candidate-edit')
+        self.delete_url = reverse('candidate-delete')
+        
+        # log in
+        url = reverse('auth-login')
+        response = self.client.post(url, {'username': 'bob', 'password': 'pwd'})
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {response.data['data']['access_token']}")
 
-    @patch("candidates.views.candidate_view.index_candidate_in_opensearch.delay")
-    def test_create_candidate(self, mock_delay):
-        response = self.client.post(self.list_url, self.candidate_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Candidate.objects.count(), 2)
-        mock_delay.assert_called_once_with(response.data['id'])
-
-    def test_create_candidate_missing_fields(self):
-        response = self.client.post(self.list_url, {"name": "No Email"}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("email", response.data)
-
-    def test_retrieve_candidate(self):
-        response = self.client.get(self.detail_url)
+    def test_retrieve_me(self):
+        response = self.client.get(self.me_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["name"], "Bob Smith")
+        self.assertEqual(response.data["data"]["name"], "Bob Smith")
 
-    def test_retrieve_candidate_not_found(self):
-        url = reverse('candidate-detail', args=[9999])
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    def test_retrieve_me_unauthenticated(self):
+        self.client.credentials()
+        response = self.client.get(self.me_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @patch("candidates.views.candidate_view.index_candidate_in_opensearch.delay")
-    def test_partial_update_candidate(self, mock_delay):
-        response = self.client.patch(self.detail_url, {"name": "Bob Updated", "skills": ["Python"]}, format='json')
+    def test_edit_candidate(self, mock_delay):
+        response = self.client.patch(self.edit_url, {"name": "Bob Updated", "skills": ["Python"]}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.candidate.refresh_from_db()
         self.assertEqual(self.candidate.name, "Bob Updated")
@@ -61,7 +55,7 @@ class CandidateViewSetTest(APITestCase):
 
     @patch("candidates.views.candidate_view.delete_candidate")
     def test_delete_candidate(self, mock_delete):
-        response = self.client.delete(self.detail_url)
+        response = self.client.delete(self.delete_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Candidate.objects.count(), 0)
         mock_delete.assert_called_once_with(self.candidate.id)
@@ -92,6 +86,11 @@ class JobApplicationViewSetTest(APITestCase):
         }
         self.list_url = reverse('job-application-list')
         self.detail_url = reverse('job-application-detail', args=[self.application.id])
+
+        # log in
+        url = reverse('auth-login')
+        response = self.client.post(url, {'username': 'charlie', 'password': 'pwd'})
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {response.data['data']['access_token']}")
 
     @patch("candidates.views.job_application_view.list_applications")
     def test_list_applications_by_candidate(self, mock_list):
