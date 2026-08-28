@@ -1,4 +1,3 @@
-# jobs/management/commands/run_consumer.py
 import json, logging
 from django.core.management.base import BaseCommand
 from kafka import KafkaConsumer
