@@ -197,7 +197,7 @@ def search_applicants(
     # Skills
     if skills:
         for skill in skills:
-            filters.append({"term": {"candidate_data.skills": skill}})
+            filters.append({"term": {"candidate_data.skills.keyword": skill}})
 
     # Location
     if location:

@@ -42,7 +42,6 @@ class ApplicationViewSet(viewsets.ViewSet):
         page_size = int(request.query_params.get("page_size", 20))
         status_filter = request.query_params.get("status")
 
-        print("-----------user id-------------: ", request.user.id)
         try:
 
             result = list_applications(
