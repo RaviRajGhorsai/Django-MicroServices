@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from opensearchpy.exceptions import NotFoundError
 
 from candidates.models import JobApplication
 from candidates.serializers import JobApplicationSerializer
@@ -22,14 +23,28 @@ class JobApplicationViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
     def list(self, request):
-        candidate_id = request.user.candidate_profile.id
+        try:
 
-        applications = list_applications(candidate_id)
+            candidate_id = request.user.candidate_profile.id
 
-        return Response(
+            applications = list_applications(candidate_id)
+
+            return Response(
             applications,
             status=status.HTTP_200_OK
-        )
+                )
+        except NotFoundError as exc:
+            if 'index_not_found_exception' in str(exc):
+             return Response(
+                {
+                    'count': 0,
+                    'results': [],
+                    'message': 'Search index is not available yet.',
+                },
+                status=status.HTTP_200_OK,
+            )
+
+            raise  
 
     def retrieve(self, request, pk=None):
         application = get_object_or_404(
