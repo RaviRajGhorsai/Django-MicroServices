@@ -1,5 +1,8 @@
 from config.celery import app
 import logging
+from django.core.mail import BadHeaderError
+
+from jobs.send_email.email import send_application_submitted_email
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,20 @@ def send_application_notification(job_id: int, candidate_name: str, candidate_em
     from jobs.models import Job
     job = Job.objects.get(pk=job_id)
     logger.info(f"[EMAIL→HR] New application for '{job.title}' from {candidate_name} <{candidate_email}>")
+    
+
+    try:
+        send_application_submitted_email(
+            recruiter_email=job.posted_by.email,
+            candidate_name=candidate_name,
+            job_title=job.title,
+        )
+    except BadHeaderError:
+    # Invalid email header
+        print("Invalid email header while sending notification.")
+    except Exception as exc:
+    # Email failed, but don't fail the application request
+        print(f"Failed to send application notification: {exc}")
 
 @app.task(queue='job-service')
 def close_expired_jobs():
