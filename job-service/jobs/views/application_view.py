@@ -3,11 +3,12 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.request import Request
 from rest_framework.response import Response
+from opensearchpy.exceptions import NotFoundError
 
 from jobs.models import Application
 from jobs.serializers.application_serializer import ApplicationSerializer
 from jobs.kafka_producer import publish_event
-from jobs.search import update_application_status_in_os, list_applications
+from jobs.search import update_application_status_in_os, list_applications, get_application
 
 
 class ApplicationViewSet(viewsets.ViewSet):
@@ -41,24 +42,36 @@ class ApplicationViewSet(viewsets.ViewSet):
         page_size = int(request.query_params.get("page_size", 20))
         status_filter = request.query_params.get("status")
 
-        result = list_applications(
-            posted_by=request.user.id,
-            status=status_filter,
-            page=page,
-            page_size=page_size,
-        )
+        print("-----------user id-------------: ", request.user.id)
+        try:
+
+            result = list_applications(
+                posted_by=request.user.id,
+                status=status_filter,
+                page=page,
+                page_size=page_size,
+            )
 
         # serializer = ApplicationSerializer(queryset, many=True)
-        return Response({
-            'data':    result,
-            'message': 'Applications retrieved successfully.',
-        }, status=status.HTTP_200_OK)
+            return Response({
+                'data':    result,
+                'message': 'Applications retrieved successfully.',
+            }, status=status.HTTP_200_OK)
+
+        except NotFoundError as exc:
+            return Response(
+            {
+                'count': 0,
+                'results': [],
+                'message': 'Application search index is not available yet.',
+            },
+            status=status.HTTP_200_OK,
+        )
 
     def retrieve(self, request: Request, pk=None):
-        instance   = self._get_own_application(pk, request)
-        serializer = ApplicationSerializer(instance)
+        result = get_application(pk) 
         return Response({
-            'data':    serializer.data,
+            'data':    result,
             'message': 'Application retrieved successfully.',
         }, status=status.HTTP_200_OK)
 
