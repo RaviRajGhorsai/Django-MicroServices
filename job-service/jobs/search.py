@@ -161,17 +161,21 @@ def update_application_status_in_os(
 
 
 def search_applicants(
-    job_id,
+    posted_by,
     query=None,
     skills=None,
     location=None,
     min_experience=None,
     status=None,
 ):
+    """
+    Search candidates who applied to jobs posted by a specific HR user.
+    """
 
     must = []
 
-    filters = [{"term": {"job_id": job_id}}]
+    # Security boundary: only applications for jobs posted by this HR
+    filters = [{"term": {"posted_by": posted_by}}]
 
     # General candidate search
     if query:
@@ -216,7 +220,7 @@ def search_applicants(
                 "filter": filters,
             }
         },
-        "sort": [{"applied_at": "desc"}],
+        "sort": [{"applied_at": {"order": "desc"}}],
         "size": 50,
     }
 
@@ -228,16 +232,12 @@ def search_applicants(
     results = []
 
     for hit in response["hits"]["hits"]:
-        source = hit["_source"]
+        candidate_data = hit["_source"].get("candidate_data", {})
 
-        results.append(
-            {
-                "candidate_id": source["candidate_id"],
-                **source.get("candidate_data", {}),
-            }
-        )
+        results.append(candidate_data)
 
     return results
+
 
 def list_applications(
     posted_by=None,
@@ -284,16 +284,18 @@ def list_applications(
     results = []
     for hit in hits:
         source = hit["_source"]
-        results.append({
-            "application_id": hit["_id"],
-            "job_id": source.get("job_id"),
-            "job_title": source.get("job_title"),
-            "candidate_id": source.get("candidate_id"),
-            "status": source.get("status"),
-            "applied_at": source.get("applied_at"),
-            "cover_letter": source.get("cover_letter"),
-            **source.get("candidate_data", {}),
-        })
+        results.append(
+            {
+                "application_id": hit["_id"],
+                "job_id": source.get("job_id"),
+                "job_title": source.get("job_title"),
+                "candidate_id": source.get("candidate_id"),
+                "status": source.get("status"),
+                "applied_at": source.get("applied_at"),
+                "cover_letter": source.get("cover_letter"),
+                **source.get("candidate_data", {}),
+            }
+        )
 
     return {
         "results": results,
@@ -301,3 +303,30 @@ def list_applications(
         "page": page,
         "page_size": page_size,
     }
+
+
+def get_application(application_id):
+    """
+    Get a single application by its OpenSearch document ID.
+
+    Returns the application in the same format as list_applications().
+    """
+
+    response = client.get(
+        index=APPLICATIONS_INDEX,
+        id=application_id,
+    )
+
+    source = response["_source"]
+
+    return {
+        "application_id": response["_id"],
+        "job_id": source.get("job_id"),
+        "job_title": source.get("job_title"),
+        "candidate_id": source.get("candidate_id"),
+        "status": source.get("status"),
+        "applied_at": source.get("applied_at"),
+        "cover_letter": source.get("cover_letter"),
+        **source.get("candidate_data", {}),
+    }
+
