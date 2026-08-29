@@ -42,6 +42,7 @@ class Command(BaseCommand):
                 send_job_match_notification.delay(
                     candidate_id=candidate.id,
                     candidate_email=candidate.email,
+                    candidate_name=candidate.name,
                     job_title=event['title'],
                     matched_skills=list(overlap),
                 )
