@@ -23,7 +23,7 @@ jobs:
             set -e
 
             echo "================================"
-            echo "Starting deployment..."
+            echo "Starting deployment...."
             echo "================================"
 
             cd /mnt/app/Django-MicroServices
