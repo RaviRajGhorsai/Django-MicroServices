@@ -1,0 +1,47 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy  
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+
+            echo "================================"
+            echo "Starting deployment..."
+            echo "================================"
+
+            cd /mnt/app
+
+            echo "Pulling latest code..."
+            git pull origin main
+
+
+            echo "Building and Starting containers..."
+            docker compose up --build -d
+
+            echo "Removing unused Docker images..."
+            docker image prune -f
+
+            echo "Checking running containers..."
+            docker compose ps
+
+            echo "================================"
+            echo "Deployment completed successfully!"
+            echo "================================"
+
