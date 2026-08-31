@@ -28,7 +28,7 @@ jobs:
 
             cd /mnt/app/Django-MicroServices
 
-            echo "Pulling latest code..."
+            echo "Pulling latest code...."
             git pull origin main
 
 
