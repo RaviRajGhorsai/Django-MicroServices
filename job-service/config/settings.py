@@ -33,11 +33,11 @@ DEBUG = True
 ALLOWED_HOSTS = ["job.pratik.info.np"]
 
 CORS_ALLOWED_ORIGINS = [
-    "job.pratik.info.np",
+        "https://job.pratik.info.np",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "job.pratik.info.np",
+        "https://job.pratik.info.np",
 ]
 # Application definition
 
