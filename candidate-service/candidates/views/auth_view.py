@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+import logging
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -10,6 +11,8 @@ from rest_framework.request import Request
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from candidates.serializers.candidate_serializer import CandidateRegisterSerializer, CandidateDetailSerializer
+
+logger = logging.getLogger(__name__)
 
 class CandidateToken(RefreshToken):
     """
@@ -35,6 +38,13 @@ class AuthViewSet(viewsets.ViewSet):
         user = serializer.save()
 
         refresh = CandidateToken.for_user(user)
+
+        logger.info(
+            "Candidate registration successful | user_id=%s | username=%s",
+            user.id,
+            user.username,
+        )
+
 
         return Response({
             'data': {
@@ -63,6 +73,13 @@ class AuthViewSet(viewsets.ViewSet):
             }, status=status.HTTP_401_UNAUTHORIZED)
 
         refresh = CandidateToken.for_user(user)
+
+        logger.info(
+            "Candidate login successful | user_id=%s | username=%s",
+            user.id,
+            user.username,
+        )
+
 
         return Response({
             'data': {
