@@ -13,6 +13,8 @@ def get_producer():
             bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
             value_serializer=lambda v: json.dumps(v).encode('utf-8'),
             key_serializer=lambda k: k.encode('utf-8') if k else None,
+            request_timeout_ms=3000,
+            delivery_timeout_ms=5000,
         )
     return _producer
 
@@ -22,7 +24,7 @@ def publish_event(topic: str, key: str, payload: dict):
         producer = get_producer()
         future = producer.send(topic, key=key, value=payload)
         producer.flush()
-        record = future.get(timeout=10)
+        record = future.get(timeout=4)
         logger.info(f"Published → {topic} | partition={record.partition} offset={record.offset}")
     except Exception as e:
         logger.error(f"Kafka publish error on topic {topic}: {e}")
