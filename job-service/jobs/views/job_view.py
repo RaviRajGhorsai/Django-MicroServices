@@ -1,17 +1,17 @@
 import logging
-
+from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from jobs.models import Job
+from jobs.models import Job, OutBoxEvent
 from jobs.serializers.job_serializer import JobSerializer
 from jobs.kafka_producer import publish_event
 from jobs.tasks import index_job_in_opensearch
-from jobs.search import search_applicants, delete_job
+from jobs.search import delete_job
 
 logger = logging.getLogger(__name__)
 
@@ -39,69 +39,159 @@ class JobViewSet(viewsets.ViewSet):
         """
         return get_object_or_404(Job, pk=pk, posted_by=request.user)
 
-
     def create(self, request: Request):
         serializer = JobSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        job = serializer.save(posted_by=request.user)  # ← link job to HR
 
-        index_job_in_opensearch.delay(job.id)
-        publish_event('job.created', str(job.id), {
-            'event_type':      'job.created',
-            'job_id':          job.id,
-            'title':           job.title,
-            'company':         job.company,
-            'location':        job.location,
-            'skills_required': job.skills_required,
-        })
+        with transaction.atomic():
+            job = serializer.save(posted_by=request.user)  # ← link job to HR
 
-        return Response({
-            'data':    serializer.data,
-            'message': 'Job created successfully.',
-        }, status=status.HTTP_201_CREATED)
+            event = OutBoxEvent.objects.create(
+                topic="job.created",
+                key=str(job.id),
+                payload={
+                    "event_type": "job.created",
+                    "job_id": job.id,
+                    "title": job.title,
+                    "company": job.company,
+                    "location": job.location,
+                    "skills_required": job.skills_required,
+                },
+            )
+            logger.info(
+                "Job created successfully",
+                extra={
+                    "user_id": request.user.id,
+                    "job_id": job.id,
+                    "title": job.title,
+                },
+            )
+
+            index_job_in_opensearch.delay(job.id)
+        try:
+            publish_event(
+                "job.created",
+                str(job.id),
+                {
+                    "event_type": "job.created",
+                    "job_id": job.id,
+                    "title": job.title,
+                    "company": job.company,
+                    "location": job.location,
+                    "skills_required": job.skills_required,
+                },
+            )
+
+            event.status = OutBoxEvent.Status.PUBLISHED
+            event.published_at = timezone.now()
+
+            event.save(update_fields=["status", "pusblished_at"])
+
+            return Response(
+                {
+                    "data": serializer.data,
+                    "message": "Job created successfully.",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
+        except Exception:
+            logger.info(f"Kafka push event failed")
 
     def list(self, request: Request):
         # HR only sees their own jobs
-        queryset   = Job.objects.filter(posted_by=request.user).order_by('-created_at')
+        queryset = Job.objects.filter(posted_by=request.user).order_by("-created_at")
         serializer = JobSerializer(queryset, many=True)
-        return Response({
-            'data':    serializer.data,
-            'message': 'Jobs retrieved successfully.',
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "data": serializer.data,
+                "message": "Jobs retrieved successfully.",
+            },
+            status=status.HTTP_200_OK,
+        )
 
     def retrieve(self, request: Request, pk=None):
-        instance   = self._get_own_job(pk, request)
+        instance = self._get_own_job(pk, request)
         serializer = JobSerializer(instance)
-        return Response({
-            'data':    serializer.data,
-            'message': 'Job retrieved successfully.',
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "data": serializer.data,
+                "message": "Job retrieved successfully.",
+            },
+            status=status.HTTP_200_OK,
+        )
 
     def partial_update(self, request: Request, pk=None):
-        instance   = self._get_own_job(pk, request)
+        instance = self._get_own_job(pk, request)
         serializer = JobSerializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        job = serializer.save()
 
-        index_job_in_opensearch.delay(job.id)
-        publish_event('job.updated', str(job.id), {
-            'event_type': 'job.updated',
-            'job_id':     job.id,
-            'title':      job.title,
-            'status':     job.status,
-        })
+        with transaction.atomic():
+            job = serializer.save()
 
-        return Response({
-            'data':    serializer.data,
-            'message': 'Job updated successfully.',
-        }, status=status.HTTP_200_OK)
+            event = OutBoxEvent.objects.create(
+                topic="job.updated",
+                key=str(job.id),
+                payload={
+                    "event_type": "job.updated",
+                    "job_id": job.id,
+                    "title": job.title,
+                    "status": job.status,
+                },
+            )
+
+            logger.info(
+                "Job updated successfully",
+                extra={
+                    "user_id": request.user.id,
+                    "job_id": job.id,
+                    "title": job.title,
+                    "status": job.status,
+                },
+            )
+
+            index_job_in_opensearch.delay(job.id)
+        try:
+            publish_event(
+                "job.updated",
+                str(job.id),
+                {
+                    "event_type": "job.updated",
+                    "job_id": job.id,
+                    "title": job.title,
+                    "status": job.status,
+                },
+            )
+
+            event.status = OutBoxEvent.Status.PUBLISHED
+            event.published_at = timezone.now()
+
+            event.save(
+                update_fields=[
+                    "status",
+                    "published_at",
+                ]
+            )
+
+            return Response(
+                {
+                    "data": serializer.data,
+                    "message": "Job updated successfully.",
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception:
+            logger.info("Kafka push event failed.")
 
     def destroy(self, request: Request, pk=None):
         instance = self._get_own_job(pk, request)
 
-        delete_job(instance.id)   # remove from OpenSearch
-        instance.delete()          # remove from DB
+        delete_job(instance.id)  # remove from OpenSearch
+        instance.delete()  # remove from DB
 
-        return Response({
-            'message': 'Job deleted successfully.',
-        }, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {
+                "message": "Job deleted successfully.",
+            },
+            status=status.HTTP_204_NO_CONTENT,
+        )

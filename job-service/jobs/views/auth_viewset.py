@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+import logging
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -9,6 +10,8 @@ from rest_framework.request import Request
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from jobs.serializers.hr_serializer import HRRegisterSerializer, HRProfileSerializer
+
+logger = logging.getLogger(__name__)
 
 class HRToken(RefreshToken):
     """
@@ -36,6 +39,13 @@ class AuthViewSet(viewsets.ViewSet):
 
         refresh = HRToken.for_user(user)
 
+        logger.info(
+            "HR registration successful | user_id=%s | username=%s",
+            user.id,
+            user.username,
+        )
+
+
         return Response({
             'data': {
                 'user':          HRProfileSerializer(user.hr_profile).data,
@@ -58,11 +68,24 @@ class AuthViewSet(viewsets.ViewSet):
         user = authenticate(request=request, username=username, password=password)
 
         if not user:
+            logger.warning(
+                "HR login failed | username=%s | reason=invalid_credentials",
+                username,
+            )
+
             return Response({
                 'message': 'Invalid credentials.',
             }, status=status.HTTP_401_UNAUTHORIZED)
 
         refresh = HRToken.for_user(user)
+
+
+        logger.info(
+            "HR login successful | user_id=%s | username=%s",
+            user.id,
+            user.username,
+        )
+
 
         return Response({
             'data': {
