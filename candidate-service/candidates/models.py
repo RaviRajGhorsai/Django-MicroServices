@@ -17,6 +17,8 @@ class Candidate(models.Model):
     experience_years = models.IntegerField(default=0, blank=True, null=True)
     location = models.CharField(max_length=255, blank=True, null=True)
     resume_text = models.TextField(blank=True, null=True)
+    resume_object_key = models.CharField(max_length=200, null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
