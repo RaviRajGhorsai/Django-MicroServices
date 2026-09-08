@@ -189,7 +189,7 @@ LOGGING = {
     },
 
     "loggers": {
-        "jobs": {
+        "candidates": {
             "handlers": ["console", "kafka"],
             "level": "INFO",
             "propagate": False,
