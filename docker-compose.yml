@@ -32,6 +32,21 @@ services:
       retries: 5
 
 
+  logging-db:
+    image: mongo:7
+    container_name: logging-mongodb
+    restart: unless-stopped
+    volumes:
+      - logging_db_data:/data/db
+
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 15s
+      retries: 5
+      start_period: 10s
+
+
 # ── Kafka (KRaft) ───────────────────────
   kafka:
     image: confluentinc/cp-kafka:7.6.0
@@ -151,10 +166,59 @@ services:
       candidate-db: { condition: service_healthy }
     command: python manage.py run_consumer
 
+  logging-service:
+    build: ./logging-service
+    ports:
+      - "8788:8788"
+    volumes:
+      - ./logging-service:/app
+    environment:
+      MONGO_URI: mongodb://logging-db:27017
+    depends_on:
+      kafka:
+        condition: service_healthy
+      logging-db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py runserver 0.0.0.0:8788"
+
+
+  logging-consumer:
+    build: ./logging-service 
+    restart: unless-stopped
+    volumes:
+      - ./logging-service:/app
+    depends_on:
+      kafka: {condition: service_healthy}
+      logging-db: {condition: service_healthy}
+    command: python manage.py run_consumer
+
+  job-outbox-worker:
+    build: ./job-service
+    volumes:
+      - ./job-service:/app
+    depends_on:
+      job-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    command: python manage.py run_outbox_service
+
+  candidate-outbox-worker:
+    build: ./candidate-service
+    volumes:
+      - ./candidate-service:/app
+    depends_on:
+      candidate-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    command: python manage.py run_outbox_service
+
 volumes:
   job_db_data:
   candidate_db_data:
   opensearch_data:
-
+  logging_db_data:
 
 
