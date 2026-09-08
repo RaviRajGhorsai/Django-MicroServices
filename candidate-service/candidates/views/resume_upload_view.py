@@ -1,17 +1,17 @@
 import uuid
 
-from rest_framework.views import APIView
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
-from candidates.services.minio_service import generate_upload_url
+from candidates.services.minio import generate_upload_url
 
 
-class ResumeUploadURLView(APIView):
+class ResumeUploadURLView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def create(self, request):
 
         candidate = request.user.candidate_profile
 
