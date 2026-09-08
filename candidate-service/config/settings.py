@@ -56,19 +56,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.postgres",
-
     "rest_framework",
     "corsheaders",
     "rest_framework_simplejwt",
-
-
     "candidates",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -114,13 +110,13 @@ DATABASES = {
 
 # Kafka
 
-KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
 
-OPENSEARCH_HOST = os.getenv('OPENSEARCH_HOST')
-OPENSEARCH_PORT = os.getenv('OPENSEARCH_PORT')
+OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
+OPENSEARCH_PORT = os.getenv("OPENSEARCH_PORT")
 
-CELERY_BROKER_URL     = os.getenv('REDIS_URL', default='redis://redis:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', default='redis://redis:6379/0')
+CELERY_BROKER_URL = os.getenv("REDIS_URL", default="redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", default="redis://redis:6379/0")
 
 
 # Password validation
@@ -183,16 +179,21 @@ MAILERS = {
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
+        "kafka": {"()": "candidates.logging.KafkaLogHandler"},
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+
+    "loggers": {
+        "jobs": {
+            "handlers": ["console", "kafka"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }
 
@@ -204,7 +205,7 @@ SIMPLE_JWT = {
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     )
 }

@@ -30,14 +30,14 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["job.pratik.info.np"]
+ALLOWED_HOSTS = ["job.pratik.info.np", "localhost"]
 
 CORS_ALLOWED_ORIGINS = [
-        "https://job.pratik.info.np",
+    "https://job.pratik.info.np",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-        "https://job.pratik.info.np",
+    "https://job.pratik.info.np",
 ]
 # Application definition
 
@@ -48,11 +48,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "rest_framework",
     "corsheaders",
     "rest_framework_simplejwt",
-   
     "jobs",
 ]
 
@@ -103,13 +101,13 @@ DATABASES = {
 
 # Kafka
 
-KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS')
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
 
-OPENSEARCH_HOST = os.getenv('OPENSEARCH_HOST')
-OPENSEARCH_PORT = os.getenv('OPENSEARCH_PORT')
+OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
+OPENSEARCH_PORT = os.getenv("OPENSEARCH_PORT")
 
-CELERY_BROKER_URL     = os.getenv('REDIS_URL', default='redis://redis:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', default='redis://redis:6379/0')
+CELERY_BROKER_URL = os.getenv("REDIS_URL", default="redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", default="redis://redis:6379/0")
 
 
 # Password validation
@@ -156,28 +154,30 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
 
-
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
+        "kafka": {"()": "jobs.logging.KafkaLogHandler"},
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+
+    "loggers": {
+        "jobs": {
+            "handlers": ["console", "kafka"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
 }
 
 SIMPLE_JWT = {
