@@ -4,6 +4,7 @@ from candidates.views.candidate_view import CandidateViewSet
 from candidates.views.job_search_view import JobSearchViewSet
 from candidates.views.job_application_view import JobApplicationViewSet
 from candidates.views.auth_view import AuthViewSet
+from candidates.views.resume_upload_view import ResumeUploadURLView
 
 router = DefaultRouter(trailing_slash=False)
 
@@ -11,5 +12,6 @@ router.register(r'auth', AuthViewSet, basename='auth')
 router.register(r'candidates', CandidateViewSet, basename='candidate')
 router.register(r'search/jobs', JobSearchViewSet, basename='job-search')
 router.register(r'applications', JobApplicationViewSet, basename='job-application')
+router.register(r'resumes', ResumeUploadURLView, basename="resume")
 
 urlpatterns = router.urls
