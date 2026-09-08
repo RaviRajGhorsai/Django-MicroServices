@@ -1,11 +1,20 @@
 from rest_framework import viewsets
-from rest_framework.response import Response
 
 from config.database import logs_collection
 from logs.serializers.log_serializer import LogSerializer
 
+from rest_framework.pagination import PageNumberPagination
+
+
+class LogPagination(PageNumberPagination):
+    page_size = 15
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
 
 class LogViewSet(viewsets.ViewSet):
+    pagination_class = LogPagination
+
     def list(self, request):
         query = {}
 
@@ -45,6 +54,17 @@ class LogViewSet(viewsets.ViewSet):
                 }
             )
 
-        serializer = LogSerializer(result, many=True)
+        paginator = self.pagination_class()
 
-        return Response(serializer.data)
+        page = paginator.paginate_queryset(
+            result,
+            request,
+            view=self,
+        )
+
+
+        serializer = LogSerializer(page, many=True)
+
+        return paginator.get_paginated_response(
+            serializer.data
+        )
