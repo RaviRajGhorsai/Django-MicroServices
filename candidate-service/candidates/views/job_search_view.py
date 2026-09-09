@@ -1,11 +1,13 @@
 from rest_framework import viewsets, status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from opensearchpy.exceptions import NotFoundError
 from candidates.search import search_jobs_from_opensearch, get_job_by_id
 
 class JobSearchViewSet(viewsets.ViewSet):
     """Read-only — queries OpenSearch jobs index directly, no job-service HTTP call"""
-
+    
+    permission_classes = [AllowAny]
     def list(self, request):
         try:
             results = search_jobs_from_opensearch(
