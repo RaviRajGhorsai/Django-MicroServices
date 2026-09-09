@@ -20,6 +20,7 @@ class CandidateUpdateSerializer(serializers.ModelSerializer):
             'experience_years',
             'location',
             'resume_text',
+            
             'created_at',
             'updated_at',
         ]
@@ -66,6 +67,7 @@ class CandidateDetailSerializer(serializers.ModelSerializer):
             "experience_years",
             "location",
             "resume_text",
+            'resume_object_key',
             "created_at",
             "updated_at",
         ]
