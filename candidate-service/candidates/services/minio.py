@@ -20,7 +20,6 @@ public_client = Minio(
     secret_key=settings.MINIO_SECRET_KEY,
     secure=settings.MINIO_PUBLIC_SECURE,
     region="us-east-1",
-    secure=True,
 )
 
 
