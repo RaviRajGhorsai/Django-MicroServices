@@ -23,5 +23,5 @@ class KafkaLogHandler(logging.Handler):
 
             print("logging applications done")
 
-        except Exception:
-            self.handleError(record)
+        except Exception as e:
+            print(f"Kafka logging failed: {e}")
