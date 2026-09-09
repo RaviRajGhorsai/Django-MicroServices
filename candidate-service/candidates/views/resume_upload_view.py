@@ -71,7 +71,7 @@ class ResumeUploadURLView(viewsets.ViewSet):
 
     @action(detail=False, methods=["get"], url_path="download")
     def download(self, request):
-        resume_object_key = request.params.get("resume_object_key")
+        resume_object_key = request.query_params.get("resume_object_key")
 
         if not resume_object_key:
             return Response(
