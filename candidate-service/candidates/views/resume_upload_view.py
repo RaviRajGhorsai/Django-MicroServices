@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 
-from candidates.services.minio import generate_upload_url
+from candidates.services.minio import generate_upload_url, generate_download_url
 
 
 class ResumeUploadURLView(viewsets.ViewSet):
@@ -65,6 +65,32 @@ class ResumeUploadURLView(viewsets.ViewSet):
             {
                 "message": "Resume uploaded successfully.",
                 "object_key": object_key,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=["get"], url_path="download")
+    def download(self, request):
+        resume_object_key = request.params.get("resume_object_key")
+
+        if not resume_object_key:
+            return Response(
+                {"detail": "resume_object_key is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            download_url = generate_download_url(resume_object_key)
+        except Exception:
+            return Response(
+                {"detail": "Failed to generate download URL."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {
+                "download_url": download_url,
+                "expires_in": 600,
             },
             status=status.HTTP_200_OK,
         )
