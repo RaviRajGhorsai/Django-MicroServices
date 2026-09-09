@@ -11,12 +11,12 @@ client = Minio(
     secure=settings.MINIO_SECURE,
 )
 
-public_client = Minio(
-    settings.MINIO_PUBLIC_ENDPOINT,
-    access_key=settings.MINIO_ACCESS_KEY,
-    secret_key=settings.MINIO_SECRET_KEY,
-    secure=settings.MINIO_PUBLIC_SECURE,
-)
+#public_client = Minio(
+#    settings.MINIO_PUBLIC_ENDPOINT,
+#    access_key=settings.MINIO_ACCESS_KEY,
+#    secret_key=settings.MINIO_SECRET_KEY,
+#    secure=settings.MINIO_PUBLIC_SECURE,
+#)
 
 def ensure_bucket_exists():
     bucket = settings.MINIO_BUCKET
@@ -28,7 +28,7 @@ def ensure_bucket_exists():
 def generate_upload_url(object_name):
     ensure_bucket_exists()
 
-    return public_client.presigned_put_object(
+    return client.presigned_put_object(
         settings.MINIO_BUCKET,
         object_name,
         expires=timedelta(minutes=10),
@@ -36,7 +36,7 @@ def generate_upload_url(object_name):
 
 
 def generate_download_url(object_name):
-    return public_client.presigned_get_object(
+    return client.presigned_get_object(
         settings.MINIO_BUCKET,
         object_name,
         expires=timedelta(minutes=10),
