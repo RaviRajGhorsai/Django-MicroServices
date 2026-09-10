@@ -4,6 +4,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from opensearchpy.exceptions import NotFoundError
@@ -16,6 +17,8 @@ from jobs.search import (
     list_applications,
     get_application,
 )
+from jobs.services.minio import generate_download_url
+
 
 logger = logging.getLogger(__name__)
 
@@ -231,6 +234,32 @@ class ApplicationViewSet(viewsets.ViewSet):
             {
                 "data": serializer.data,
                 "message": "Application updated successfully.",
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=["get"], url_path="resume/download")
+    def download(self, request):
+        resume_object_key = request.query_params.get("resume_object_key")
+
+        if not resume_object_key:
+            return Response(
+                {"detail": "resume_object_key is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            download_url = generate_download_url(resume_object_key)
+        except Exception:
+            return Response(
+                {"detail": "Failed to generate download URL."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {
+                "download_url": download_url,
+                "expires_in": 600,
             },
             status=status.HTTP_200_OK,
         )
