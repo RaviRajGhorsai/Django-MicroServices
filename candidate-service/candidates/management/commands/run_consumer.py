@@ -83,8 +83,7 @@ class Command(BaseCommand):
         send_application_status_update.delay(
             application_id=event["application_id"],
             status=event["new_status"],
-        )
-
+        ) 
         send_websocket_notification(
             event["candidate_id"],
             {
