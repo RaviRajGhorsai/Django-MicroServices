@@ -10,12 +10,17 @@ def send_websocket_notification(user_id, data):
     print(f"WS SEND GROUP: {group_name}")
     print(f"WS SEND DATA: {data}")
 
-    async_to_sync(channel_layer.group_send)(
-        group_name,
-        {
-            "type": "notification",
-            "data": data,
-        },
-    )
+    try:
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                "type": "notification",
+                "data": data,
+            },
+        )
 
-    print("WS GROUP SEND: OK")
+        print("WS GROUP SEND: OK")
+
+    except Exception as exc:
+        print(f"WS GROUP SEND ERROR: {type(exc).__name__}: {exc}")
+        raise
