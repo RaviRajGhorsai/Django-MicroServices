@@ -70,7 +70,7 @@ class Command(BaseCommand):
             )
             
             print("kafka consumer ok event received.")
-            print(f"Posted BY: {application.posted_by}")
+            print(f"Posted BY: {application.job.posted_by}")
             send_websocket_notification(
                 application.job.posted_by,
                 {
