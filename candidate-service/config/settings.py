@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["candidate.pratik.info.np", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["candidate.pratik.info.np", "localhost", "127.0.0.1", "13.61.230.123"]
 
 CORS_ALLOWED_ORIGINS = [
     "https://candidate.pratik.info.np",
