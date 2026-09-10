@@ -85,7 +85,7 @@ class JobViewSet(viewsets.ViewSet):
             event.status = OutBoxEvent.Status.PUBLISHED
             event.published_at = timezone.now()
 
-            event.save(update_fields=["status", "pusblished_at"])
+            event.save(update_fields=["status", "published_at"])
 
             return Response(
                 {
