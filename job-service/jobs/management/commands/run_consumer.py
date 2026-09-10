@@ -77,7 +77,7 @@ class Command(BaseCommand):
                     "type": "Application Submitted",
                     "message": f"New application submitted from {event['candidate_data'].get('name', '')}",
                     "job_id": event["job_id"],
-                    "job_title": event["title"],
+                    "job_title": event["job_title"],
                     "data": None,
                 },
             )
