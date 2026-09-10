@@ -17,3 +17,5 @@ def send_websocket_notification(user_id, data):
             "data": data,
         },
     )
+
+    print("WS GROUP SEND: OK")
