@@ -90,7 +90,6 @@ class Command(BaseCommand):
                 "type": "Job Status Update",
                 "message": f"Status: {event['new_status']}",
                 "job_id": event["job_id"],
-                "job_title": event["job_title"],
                 "data": None,
             },
         )

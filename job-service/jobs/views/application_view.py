@@ -168,7 +168,6 @@ class ApplicationViewSet(viewsets.ViewSet):
                     "event_type": "application.status_updated",
                     "job_id": instance.job_id,
                     "candidate_id": instance.candidate_id,
-                    "job_title": instance.job.title,
                     "application_id": instance.id,
                     "new_status": new_status,
                 },
@@ -206,8 +205,7 @@ class ApplicationViewSet(viewsets.ViewSet):
                         "event_type": "application.status_updated",
                         "job_id": instance.job_id,
                         "candidate_id": instance.candidate_id,
-                        "application_id": instance.id,
-                        "job_title": instance.job.title,
+                        "application_id": instance.id, 
                         "new_status": new_status,
                     },
                 )
