@@ -17,5 +17,5 @@ def generate_download_url(object_name):
     return public_client.presigned_get_object(
         settings.MINIO_BUCKET,
         object_name,
-        expires=timedelta(minutes=10),
+        expires=timedelta(minutes=2),
     )
