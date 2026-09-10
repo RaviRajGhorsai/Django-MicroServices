@@ -90,7 +90,6 @@ class ResumeUploadURLView(viewsets.ViewSet):
         return Response(
             {
                 "download_url": download_url,
-                "expires_in": 600,
             },
             status=status.HTTP_200_OK,
         )
