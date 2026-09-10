@@ -70,9 +70,9 @@ class Command(BaseCommand):
             )
             
             print("kafka consumer ok event received.")
-            print(f"Posted BY: {application.job.posted_by}")
+            print(f"Posted BY: {application.job.posted_by.id}")
             send_websocket_notification(
-                application.job.posted_by,
+                application.job.posted_by.id,
                 {
                     "type": "Application Submitted",
                     "message": f"New application submitted from {event['candidate_data'].get('name', '')}",
