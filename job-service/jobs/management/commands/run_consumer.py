@@ -2,6 +2,8 @@ import json, logging
 from django.core.management.base import BaseCommand
 from kafka import KafkaConsumer
 from django.conf import settings
+from jobs.websockets.helper import send_websocket_notification
+
 
 logger = logging.getLogger(__name__)
 
@@ -67,3 +69,13 @@ class Command(BaseCommand):
                 candidate_email=event["candidate_data"].get("email", ""),
             )
 
+            send_websocket_notification(
+                event["posted_by"],
+                {
+                    "type": "Application Submitted",
+                    "message": f"New application submitted from {event['candidate_data'].get('name', '')}",
+                    "job_id": event["job_id"],
+                    "job_title": event["title"],
+                    "data": None,
+                },
+            )
