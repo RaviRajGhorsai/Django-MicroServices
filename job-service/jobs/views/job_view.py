@@ -95,8 +95,8 @@ class JobViewSet(viewsets.ViewSet):
                 status=status.HTTP_201_CREATED,
             )
 
-        except Exception:
-            logger.info(f"Kafka push event failed")
+        except Exception as e:
+            logger.info(f"Kafka push event failed. {e}")
 
     def list(self, request: Request):
         # HR only sees their own jobs
