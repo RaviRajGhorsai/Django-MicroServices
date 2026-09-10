@@ -3,6 +3,8 @@ from django.core.management.base import BaseCommand
 from kafka import KafkaConsumer
 from django.conf import settings
 
+from candidates.websockets.helper import send_websocket_notification
+
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
@@ -47,6 +49,15 @@ class Command(BaseCommand):
                     matched_skills=list(overlap),
                 )
 
+                send_websocket_notification(candidate.id, {
+                        "type": "Job Match",
+                         "message": f"New job matching your skills: {event['title']}",
+                        "job_id": event["job_id"],
+                        "job_title": event["title"],
+                        "matched_skills": list(overlap),
+
+                    })
+
     def on_job_closed(self, event: dict):
         from candidates.models import JobApplication
         JobApplication.objects.filter(
@@ -60,7 +71,16 @@ class Command(BaseCommand):
             job_id=event['job_id'],
             candidate_id=event['candidate_id'],
         ).update(status=event['new_status'])
+
+
         send_application_status_update.delay(
             application_id=event['application_id'],
             status=event['new_status'],
         )
+
+        send_websocket_notification(event["candidate_id"], {
+                        "type": "Job Status Update",
+                        "message": f"Status: {event["new_status"]}",
+                        "job_id": event["job_id"],
+                        "job_title": event["title"],
+                    })
