@@ -27,6 +27,5 @@ COPY . /app
 
 
 EXPOSE 8777
-CMD ["python", "-u", "manage.py", "runserver", "0.0.0.0:8777"]  
 
-
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8777", "config.asgi:application"]
